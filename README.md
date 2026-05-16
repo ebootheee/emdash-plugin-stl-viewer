@@ -1,4 +1,4 @@
-# @bootheio/emdash-plugin-stl-viewer
+# emdash-plugin-stl-viewer
 
 An [EmDash CMS](https://emdashcms.com) plugin that embeds interactive 3D previews of STL files inside Portable Text content. Drop a `/stl` block into any post or page, paste a URL, and get a touch-friendly orbit viewer that loads `three.js` lazily on viewport entry.
 
@@ -19,14 +19,14 @@ An [EmDash CMS](https://emdashcms.com) plugin that embeds interactive 3D preview
 ## Installation
 
 ```bash
-pnpm add @bootheio/emdash-plugin-stl-viewer three
+pnpm add emdash-plugin-stl-viewer three
 # (peers: astro, emdash, three)
 ```
 
 Register it in `astro.config.mjs`:
 
 ```js
-import { stlViewerPlugin } from "@bootheio/emdash-plugin-stl-viewer";
+import { stlViewerPlugin } from "emdash-plugin-stl-viewer";
 
 export default defineConfig({
 	integrations: [

@@ -7,7 +7,7 @@
  * @example
  * ```ts
  * // astro.config.mjs
- * import { stlViewerPlugin } from "@bootheio/emdash-plugin-stl-viewer";
+ * import { stlViewerPlugin } from "emdash-plugin-stl-viewer";
  * plugins: [stlViewerPlugin()]
  * ```
  */
@@ -25,8 +25,8 @@ export function stlViewerPlugin(
 	return {
 		id: PLUGIN_ID,
 		version: PLUGIN_VERSION,
-		entrypoint: "@bootheio/emdash-plugin-stl-viewer",
-		componentsEntry: "@bootheio/emdash-plugin-stl-viewer/astro",
+		entrypoint: "emdash-plugin-stl-viewer",
+		componentsEntry: "emdash-plugin-stl-viewer/astro",
 		options,
 	};
 }

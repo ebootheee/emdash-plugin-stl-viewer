@@ -1,5 +1,5 @@
 {
-	"name": "@bootheio/emdash-plugin-stl-viewer",
+	"name": "emdash-plugin-stl-viewer",
 	"version": "0.1.0",
 	"description": "EmDash CMS plugin: embed interactive 3D previews of STL files in Portable Text content",
 	"keywords": [
@@ -49,5 +49,6 @@
 	},
 	"publishConfig": {
 		"access": "public"
-	}
+	},
+	"sideEffects": false
 }
