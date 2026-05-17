@@ -1,17 +1,26 @@
 #!/usr/bin/env node
 /**
- * Generate test STL fixtures for local development.
+ * Generate test fixtures (STL + 3MF) for local development.
  *
- * Writes a few simple solids as binary STL files to public/stls/. Run with:
+ * Writes a few simple solids to public/stls/. Run with:
  *   node packages/plugins/stl-viewer/scripts/generate-fixtures.mjs
+ *
+ * 3MF generation uses `fflate` (a transitive dep via three's 3MFLoader) to
+ * zip the minimal three-part archive (Content_Types, rels, 3dmodel.model).
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { zipSync, strToU8 } from "fflate";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+// Default output assumes the plugin is checked out inside a monorepo at
+// packages/plugins/stl-viewer/. Override with FIXTURES_DIR for a standalone
+// checkout, e.g. `FIXTURES_DIR=./public/stls node scripts/generate-fixtures.mjs`.
 const PROJECT_ROOT = join(__dirname, "..", "..", "..", "..");
-const OUT_DIR = join(PROJECT_ROOT, "public", "stls");
+const OUT_DIR = process.env.FIXTURES_DIR
+	? join(process.cwd(), process.env.FIXTURES_DIR)
+	: join(PROJECT_ROOT, "public", "stls");
 
 mkdirSync(OUT_DIR, { recursive: true });
 
@@ -186,9 +195,103 @@ function knurledCylinder(radius = 12, height = 24, segments = 64) {
 	return tris;
 }
 
+// ─── 3MF writer ──────────────────────────────────────────────────
+
+/**
+ * Write a minimal binary 3MF file. A 3MF is a zip containing three parts:
+ *   - [Content_Types].xml — MIME-type registry for the package
+ *   - _rels/.rels         — package-relationship pointer to the model
+ *   - 3D/3dmodel.model    — the actual mesh as 3MF XML
+ *
+ * No textures, no colors, no metadata; just enough to round-trip through
+ * three.js's 3MFLoader for fixture testing.
+ */
+function writeMinimal3MF(triangles, outPath) {
+	// Deduplicate vertices so the model is valid 3MF (mesh uses indexed verts).
+	const vertMap = new Map();
+	const verts = [];
+	function vKey(v) {
+		// Compact, exact key — these are fixture floats, no fp drift to worry about.
+		return `${v[0]},${v[1]},${v[2]}`;
+	}
+	function addVert(v) {
+		const k = vKey(v);
+		const existing = vertMap.get(k);
+		if (existing !== undefined) return existing;
+		const idx = verts.length;
+		verts.push(v);
+		vertMap.set(k, idx);
+		return idx;
+	}
+	const indexedTris = triangles.map(([a, b, c]) => [
+		addVert(a),
+		addVert(b),
+		addVert(c),
+	]);
+
+	const vertXml = verts
+		.map((v) => `      <vertex x="${v[0]}" y="${v[1]}" z="${v[2]}"/>`)
+		.join("\n");
+	const triXml = indexedTris
+		.map(
+			([a, b, c]) =>
+				`      <triangle v1="${a}" v2="${b}" v3="${c}"/>`,
+		)
+		.join("\n");
+
+	const model = `<?xml version="1.0" encoding="UTF-8"?>
+<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">
+  <resources>
+    <object id="1" type="model">
+      <mesh>
+        <vertices>
+${vertXml}
+        </vertices>
+        <triangles>
+${triXml}
+        </triangles>
+      </mesh>
+    </object>
+  </resources>
+  <build>
+    <item objectid="1"/>
+  </build>
+</model>
+`;
+
+	const contentTypes = `<?xml version="1.0" encoding="UTF-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>
+</Types>
+`;
+
+	const rels = `<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel" Target="/3D/3dmodel.model"/>
+</Relationships>
+`;
+
+	const archive = zipSync({
+		"[Content_Types].xml": strToU8(contentTypes),
+		"_rels/.rels": strToU8(rels),
+		"3D/3dmodel.model": strToU8(model),
+	});
+	writeFileSync(outPath, Buffer.from(archive));
+	console.log(
+		`wrote ${outPath} (${archive.byteLength} bytes, ${verts.length} verts, ${indexedTris.length} triangles)`,
+	);
+}
+
 // ─── Generate ────────────────────────────────────────────────────
 
 writeBinarySTL(cube(20), join(OUT_DIR, "cube.stl"));
 writeBinarySTL(icosahedron(15), join(OUT_DIR, "icosahedron.stl"));
 writeBinarySTL(torus(18, 6, 64, 24), join(OUT_DIR, "torus.stl"));
 writeBinarySTL(knurledCylinder(12, 24, 96), join(OUT_DIR, "knurled.stl"));
+
+// 3MF counterparts so the same primitives can be tested through the 3MF
+// loader path. We re-use the same triangle generators.
+writeMinimal3MF(cube(20), join(OUT_DIR, "cube.3mf"));
+writeMinimal3MF(icosahedron(15), join(OUT_DIR, "icosahedron.3mf"));
+writeMinimal3MF(torus(18, 6, 48, 16), join(OUT_DIR, "torus.3mf"));

@@ -1,12 +1,13 @@
 {
 	"name": "emdash-plugin-stl-viewer",
-	"version": "0.1.0",
-	"description": "EmDash CMS plugin: embed interactive 3D previews of STL files in Portable Text content",
+	"version": "0.2.0",
+	"description": "EmDash CMS plugin: embed interactive 3D previews of STL or 3MF files in Portable Text content",
 	"keywords": [
 		"emdash",
 		"emdash-plugin",
 		"astro",
 		"stl",
+		"3mf",
 		"3d",
 		"three.js",
 		"portable-text"
@@ -45,6 +46,7 @@
 	},
 	"devDependencies": {
 		"@types/three": "^0.171.0",
+		"fflate": "^0.8.3",
 		"typescript": "^5.6.0"
 	},
 	"publishConfig": {

@@ -1,8 +1,11 @@
 /**
- * STL Viewer plugin for EmDash CMS.
+ * 3D Model Viewer plugin for EmDash CMS (STL + 3MF).
  *
  * Native-format trusted plugin. Registers a `stl-viewer` Portable Text block
- * type backed by an Astro component that lazy-loads three.js on viewport entry.
+ * (kept under the original type for backward compatibility) backed by an
+ * Astro component that lazy-loads three.js on viewport entry. STL is decoded
+ * with `STLLoader`; 3MF is decoded with `3MFLoader` (lazy-imported only when
+ * a 3MF URL is encountered).
  *
  * @example
  * ```ts
@@ -17,7 +20,7 @@ import type { PluginDescriptor, ResolvedPlugin } from "emdash";
 export interface StlViewerOptions {}
 
 const PLUGIN_ID = "stl-viewer";
-const PLUGIN_VERSION = "0.1.0";
+const PLUGIN_VERSION = "0.2.0";
 
 export function stlViewerPlugin(
 	options: StlViewerOptions = {},
@@ -39,16 +42,27 @@ export function createPlugin(_options: StlViewerOptions = {}): ResolvedPlugin {
 			portableTextBlocks: [
 				{
 					type: "stl-viewer",
-					label: "3D Model (STL)",
+					label: "3D Model (STL or 3MF)",
 					icon: "code",
-					description: "Embed an interactive 3D preview of an STL file",
-					placeholder: "Paste STL file URL...",
+					description:
+						"Embed an interactive 3D preview of an STL or 3MF file",
+					placeholder: "Paste STL or 3MF URL...",
 					fields: [
 						{
 							type: "text_input",
 							action_id: "id",
-							label: "STL URL",
+							label: "Model URL (.stl or .3mf)",
 							placeholder: "https://… or /_emdash/api/media/file/…",
+						},
+						{
+							type: "select",
+							action_id: "format",
+							label: "Format",
+							options: [
+								{ label: "Auto-detect from URL (default)", value: "auto" },
+								{ label: "STL", value: "stl" },
+								{ label: "3MF", value: "3mf" },
+							],
 						},
 						{
 							type: "text_input",

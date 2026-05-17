@@ -1,12 +1,15 @@
 ---
 /**
- * STL Viewer — Portable Text block component.
+ * 3D Model Viewer — Portable Text block component.
  *
  * Server-renders a placeholder card; client-side script dynamically imports
  * three.js on viewport entry and renders an interactive 3D preview.
  *
+ * Supports STL and 3MF. Format is auto-detected from the URL's file
+ * extension; pass `format` to override (e.g. for opaque CDN URLs).
+ *
  * Props.node fields (from sandbox-entry.ts):
- *   id          STL file URL
+ *   id          Model file URL (.stl or .3mf)
  *   title       optional title shown in header
  *   caption     optional caption shown beneath
  *   material    matte | glossy | metal | normal | clay
@@ -14,6 +17,7 @@
  *   height      compact | standard | tall
  *   autoRotate  boolean
  *   showGrid    boolean
+ *   format      auto | stl | 3mf  (default: auto, detected from URL)
  */
 
 interface Props {
@@ -26,6 +30,7 @@ interface Props {
 		height?: string;
 		autoRotate?: boolean | string;
 		showGrid?: boolean | string;
+		format?: string;
 	};
 }
 
@@ -48,13 +53,29 @@ function toBool(v: unknown, dflt: boolean) {
 const autoRotate = toBool(node.autoRotate, true);
 const showGrid = toBool(node.showGrid, true);
 
-// Derive a friendly filename for the placeholder
+const formatRaw = (node.format ?? "auto").toLowerCase();
+const format =
+	formatRaw === "stl" || formatRaw === "3mf" || formatRaw === "auto"
+		? formatRaw
+		: "auto";
+
+// Derive a friendly filename for the placeholder and a display badge from
+// either the explicit format override or the URL extension. The actual
+// loader decision happens client-side in viewer-client.ts; we mirror it
+// here only for display.
 let filename = "";
 try {
 	if (url) filename = new URL(url, "http://x").pathname.split("/").pop() ?? "";
 } catch {
 	filename = url.split("/").pop() ?? "";
 }
+const detectedBadge = (() => {
+	if (format === "stl" || format === "3mf") return format.toUpperCase();
+	const lower = filename.toLowerCase();
+	if (lower.endsWith(".3mf")) return "3MF";
+	return "STL";
+})();
+const downloadLabel = `Download ${detectedBadge}`;
 
 const config = {
 	url,
@@ -62,6 +83,7 @@ const config = {
 	color,
 	autoRotate,
 	showGrid,
+	format,
 };
 ---
 
@@ -82,7 +104,7 @@ const config = {
 						stroke-linejoin="round"
 					></path>
 				</svg>
-				STL
+				{detectedBadge}
 			</span>
 			{title && <span class="stl-viewer__title">{title}</span>}
 			<div class="stl-viewer__actions">
@@ -117,8 +139,8 @@ const config = {
 					class="stl-viewer__button"
 					href={url}
 					download
-					title="Download STL"
-					aria-label="Download STL"
+					title={downloadLabel}
+					aria-label={downloadLabel}
 				>
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 						<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
