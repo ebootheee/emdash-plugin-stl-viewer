@@ -20,7 +20,7 @@ import type { PluginDescriptor, ResolvedPlugin } from "emdash";
 export interface StlViewerOptions {}
 
 const PLUGIN_ID = "stl-viewer";
-const PLUGIN_VERSION = "0.2.0";
+const PLUGIN_VERSION = "0.3.0";
 
 export function stlViewerPlugin(
 	options: StlViewerOptions = {},
@@ -49,10 +49,11 @@ export function createPlugin(_options: StlViewerOptions = {}): ResolvedPlugin {
 					placeholder: "Paste STL or 3MF URL...",
 					fields: [
 						{
-							type: "text_input",
+							type: "media_picker",
 							action_id: "id",
-							label: "Model URL (.stl or .3mf)",
-							placeholder: "https://… or /_emdash/api/media/file/…",
+							label: "Model file (.stl or .3mf)",
+							mime_type_filter: "model/",
+							placeholder: "Pick from library, upload, or paste URL",
 						},
 						{
 							type: "select",

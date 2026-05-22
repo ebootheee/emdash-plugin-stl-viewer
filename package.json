@@ -1,6 +1,6 @@
 {
 	"name": "emdash-plugin-stl-viewer",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "EmDash CMS plugin: embed interactive 3D previews of STL or 3MF files in Portable Text content",
 	"keywords": [
 		"emdash",
@@ -41,7 +41,7 @@
 	},
 	"peerDependencies": {
 		"astro": ">=6.0.0",
-		"emdash": ">=0.6.0",
+		"emdash": ">=0.12.0",
 		"three": "^0.171.0"
 	},
 	"devDependencies": {

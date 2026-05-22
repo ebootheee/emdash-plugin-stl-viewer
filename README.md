@@ -48,7 +48,7 @@ In the editor, type `/` and pick **3D Model (STL or 3MF)**. Fill in:
 
 | Field | Description |
 | --- | --- |
-| **Model URL** | Direct URL to the file. Upload via the EmDash media library and paste the `/_emdash/api/media/file/…` URL, or use any CORS-permitting external host. |
+| **Model file** | Opens the EmDash media picker filtered to `model/*` MIME types. Pick an existing asset, upload a new `.stl`/`.3mf`, or paste a URL directly into the input. |
 | **Format** | Auto-detect from URL (default) / STL / 3MF. Override when the URL has no extension. |
 | **Title** | Optional header text. |
 | **Caption** | Optional figcaption below the viewer. |
@@ -60,20 +60,13 @@ In the editor, type `/` and pick **3D Model (STL or 3MF)**. Fill in:
 
 ### Uploading STL or 3MF files
 
-EmDash's **global** upload allowlist accepts only `image/*`, `video/*`, `audio/*`, and `application/pdf` by default. To upload STL or 3MF into the media library, add a `file` field to any collection with widened `allowedMimeTypes`:
+The block's **Model file** field uses EmDash's `media_picker` with `mime_type_filter: "model/"`. In the popup you can:
 
-```bash
-npx emdash schema add-field posts model_files --type file --url https://your-site.example.com
-# Then patch the field's validation in DB or via the admin:
-#   allowedMimeTypes:
-#     - model/stl
-#     - model/3mf
-#     - application/sla
-#     - application/vnd.ms-package.3dmanufacturing-3dmodel+xml
-#     - application/octet-stream
-```
+- **Select** an existing asset (filtered to `model/*` MIME types).
+- **Upload** a new `.stl` or `.3mf` — the file dialog's `accept` is scoped to `model/`, and EmDash's `/_emdash/api/media/upload-url` endpoint passes the MIME type through to R2 without a global allowlist.
+- **Paste a URL** directly into the input — the field value is a plain string, so external URLs (`https://…`) work too.
 
-Upload through the admin media picker scoped to that field, copy the resulting `/_emdash/api/media/file/<id>` URL, and paste it into the 3D Model block.
+Browsers may not recognise `.stl` / `.3mf` from extension alone (the `Content-Type` arrives as `application/octet-stream`). EmDash now retains the upload's original `Content-Type` header, but if you're hosting your own asset server, set `Content-Type: model/stl` or `model/3mf` explicitly. The viewer itself does not require a particular MIME type — it sniffs the URL's extension or the explicit `format` override.
 
 ## Architecture
 
@@ -125,8 +118,14 @@ pnpm typecheck
 ## Compatibility
 
 - Astro `>= 6.0`
-- EmDash `>= 0.6` (Portable Text slash-menu block types). The `format` field uses Block Kit's `select` element, supported throughout.
+- EmDash `>= 0.12` (uses Block Kit's `media_picker` element with `mime_type_filter`).
 - `three` `^0.171.0`
+
+## Changelog
+
+- **0.3.0** — Switch the Model URL field to a `media_picker` filtered to `model/*` MIME types. Authors get a unified pick/upload/paste-URL popup in the block form. Bumps the required EmDash version to `>= 0.12`. Existing content is unchanged — the field value is still a plain URL string.
+- **0.2.0** — Add 3MF support alongside STL. `3MFLoader` (plus the bundled fflate zip decoder) lazy-loads only when a 3MF URL is encountered.
+- **0.1.0** — Initial release. STL viewer block with five materials, three sizes, auto-rotate, touch support, and a lazy three.js bundle.
 
 ## License
 
