@@ -26,10 +26,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
-
-      - name: Upgrade npm to >=11.5 (required for OIDC trusted publishing)
-        run: npm install -g npm@latest
+          node-version: "24"
 
       - name: Print npm/node versions
         run: |
