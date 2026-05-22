@@ -1,6 +1,10 @@
 # emdash-plugin-stl-viewer
 
-An [EmDash CMS](https://emdashcms.com) plugin that embeds interactive 3D previews of **STL** and **3MF** files inside Portable Text content. Drop a 3D Model block into any post or page, paste a URL, and get a touch-friendly orbit viewer that loads `three.js` lazily on viewport entry.
+[![npm version](https://img.shields.io/npm/v/emdash-plugin-stl-viewer.svg)](https://www.npmjs.com/package/emdash-plugin-stl-viewer)
+[![npm downloads](https://img.shields.io/npm/dm/emdash-plugin-stl-viewer.svg)](https://www.npmjs.com/package/emdash-plugin-stl-viewer)
+[![license](https://img.shields.io/npm/l/emdash-plugin-stl-viewer.svg)](./LICENSE)
+
+An [EmDash CMS](https://emdashcms.com) plugin that embeds interactive 3D previews of **STL** and **3MF** files inside Portable Text content. Drop a 3D Model block into any post or page, pick a file (or paste a URL), and get a touch-friendly orbit viewer that loads `three.js` lazily on viewport entry.
 
 ![A rendered STL model embedded in an article](./screenshot.png)
 
