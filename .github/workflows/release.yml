@@ -28,18 +28,12 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Configure npm registry (no auth token — OIDC will provide one)
-        run: |
-          echo "registry=https://registry.npmjs.org/" > "$HOME/.npmrc"
-
-      - name: Print npm/node versions + OIDC env
-        run: |
-          node --version
-          npm --version
-          echo "ACTIONS_ID_TOKEN_REQUEST_URL present: $([ -n \"$ACTIONS_ID_TOKEN_REQUEST_URL\" ] && echo yes || echo no)"
-          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN present: $([ -n \"$ACTIONS_ID_TOKEN_REQUEST_TOKEN\" ] && echo yes || echo no)"
-          echo ".npmrc contents:"
-          cat "$HOME/.npmrc" || echo "(no .npmrc)"
+      # Setup-node's `registry-url` writes _authToken=${NODE_AUTH_TOKEN} into
+      # .npmrc and the literal placeholder breaks the OIDC fallback. Configure
+      # the registry manually instead — npm 11.5+ then exchanges an OIDC token
+      # for a publish token automatically.
+      - name: Configure npm registry (no auth token — OIDC handles auth)
+        run: echo "registry=https://registry.npmjs.org/" > "$HOME/.npmrc"
 
       - name: Verify tag matches package.json
         if: startsWith(github.ref, 'refs/tags/v')
@@ -51,10 +45,10 @@ jobs:
             exit 1
           fi
 
-      - name: Publish to npm with provenance (OIDC)
+      - name: Publish to npm with provenance
         run: |
           if [ "${{ inputs.dry-run }}" = "true" ]; then
-            npm publish --provenance --access public --dry-run --loglevel=verbose
+            npm publish --provenance --access public --dry-run
           else
-            npm publish --provenance --access public --loglevel=verbose
+            npm publish --provenance --access public
           fi
