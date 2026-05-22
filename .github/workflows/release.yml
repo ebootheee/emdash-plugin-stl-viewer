@@ -28,6 +28,10 @@ jobs:
         with:
           node-version: "24"
 
+      - name: Configure npm registry (no auth token — OIDC will provide one)
+        run: |
+          echo "registry=https://registry.npmjs.org/" > "$HOME/.npmrc"
+
       - name: Print npm/node versions
         run: |
           node --version
