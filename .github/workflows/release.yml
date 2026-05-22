@@ -32,10 +32,14 @@ jobs:
         run: |
           echo "registry=https://registry.npmjs.org/" > "$HOME/.npmrc"
 
-      - name: Print npm/node versions
+      - name: Print npm/node versions + OIDC env
         run: |
           node --version
           npm --version
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL present: $([ -n \"$ACTIONS_ID_TOKEN_REQUEST_URL\" ] && echo yes || echo no)"
+          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN present: $([ -n \"$ACTIONS_ID_TOKEN_REQUEST_TOKEN\" ] && echo yes || echo no)"
+          echo ".npmrc contents:"
+          cat "$HOME/.npmrc" || echo "(no .npmrc)"
 
       - name: Verify tag matches package.json
         if: startsWith(github.ref, 'refs/tags/v')
@@ -50,7 +54,7 @@ jobs:
       - name: Publish to npm with provenance (OIDC)
         run: |
           if [ "${{ inputs.dry-run }}" = "true" ]; then
-            npm publish --provenance --access public --dry-run
+            npm publish --provenance --access public --dry-run --loglevel=verbose
           else
-            npm publish --provenance --access public
+            npm publish --provenance --access public --loglevel=verbose
           fi
